@@ -40,12 +40,14 @@ const os = __importStar(require("os"));
 const child_process_1 = require("child_process");
 const util_1 = require("util");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
+// Global variables to track network stats over time
+let previousNetworkStats = null;
 async function getSystemInfo() {
     const cpuCount = os.cpus().length;
     const freeMemBytes = os.freemem();
     const totalMemBytes = os.totalmem();
-    const memoryUsed = Math.round((totalMemBytes - freeMemBytes) / (1024 * 1024));
-    const memoryTotal = Math.round(totalMemBytes / (1024 * 1024));
+    const memoryUsed = (totalMemBytes - freeMemBytes) / (1024 * 1024 * 1024); // GB
+    const memoryTotal = totalMemBytes / (1024 * 1024 * 1024); // GB
     const memoryPercentage = Math.round(((totalMemBytes - freeMemBytes) / totalMemBytes) * 100);
     const uptime = Math.round(os.uptime() / 60);
     const loadAverage = os.loadavg();
@@ -66,10 +68,36 @@ async function getSystemInfo() {
         if (mainInterface) {
             const { stdout: netStats } = await execAsync(`cat /proc/net/dev | grep ${mainInterface} | awk '{print $2, $10}'`);
             if (netStats.trim()) {
-                const [rx, tx] = netStats.trim().split(' ');
-                const rxMB = Math.round(parseInt(rx) / (1024 * 1024));
-                const txMB = Math.round(parseInt(tx) / (1024 * 1024));
-                networkInfo = `↓${rxMB}MB ↑${txMB}MB`;
+                const [rxBytes, txBytes] = netStats.trim().split(' ').map(Number);
+                const currentTime = Date.now();
+                if (previousNetworkStats && previousNetworkStats.interface === mainInterface) {
+                    // Calculate speed (bytes per second)
+                    const timeDiff = (currentTime - previousNetworkStats.timestamp) / 1000; // seconds
+                    const rxDiff = rxBytes - previousNetworkStats.rxBytes;
+                    const txDiff = txBytes - previousNetworkStats.txBytes;
+                    if (timeDiff > 0) {
+                        const rxSpeed = Math.round(rxDiff / timeDiff); // bytes/sec
+                        const txSpeed = Math.round(txDiff / timeDiff); // bytes/sec
+                        // Format speeds nicely
+                        const formatSpeed = (bytesPerSec) => {
+                            if (bytesPerSec < 1024) {
+                                return `${bytesPerSec}B/s`;
+                            }
+                            if (bytesPerSec < 1024 * 1024) {
+                                return `${(bytesPerSec / 1024).toFixed(1)}KB/s`;
+                            }
+                            return `${(bytesPerSec / (1024 * 1024)).toFixed(1)}MB/s`;
+                        };
+                        networkInfo = `↓${formatSpeed(rxSpeed)} ↑${formatSpeed(txSpeed)}`;
+                    }
+                }
+                // Update previous stats for next calculation
+                previousNetworkStats = {
+                    interface: mainInterface,
+                    rxBytes,
+                    txBytes,
+                    timestamp: currentTime
+                };
             }
         }
         // Get CPU temperature (if available)
@@ -118,7 +146,7 @@ async function getCpuUsage() {
 }
 function formatSystemInfo(info) {
     const config = vscode.workspace.getConfiguration('linuxSysinfoMonitor');
-    let result = `🖥️ CPU: ${info.cpuCount}c/${info.cpuUsage}% | 🧠 RAM: ${info.memoryUsed}/${info.memoryTotal}MB (${info.memoryPercentage}%)`;
+    let result = `🖥️ CPU: ${info.cpuCount}c/${info.cpuUsage}% | 🧠 RAM: ${info.memoryUsed.toFixed(1)}/${info.memoryTotal.toFixed(1)}GB (${info.memoryPercentage}%)`;
     if (config.get('showDiskUsage', true) && info.diskUsage !== 'N/A') {
         result += ` | 💾 Disk: ${info.diskUsage}`;
     }
@@ -143,8 +171,8 @@ function formatDetailedSystemInfo(info) {
         details += `   • Temperature: ${info.temperature}°C\n`;
     }
     details += `\n🧠 **Memory Information:**\n`;
-    details += `   • Used: ${info.memoryUsed} MB\n`;
-    details += `   • Total: ${info.memoryTotal} MB\n`;
+    details += `   • Used: ${info.memoryUsed.toFixed(1)} GB\n`;
+    details += `   • Total: ${info.memoryTotal.toFixed(1)} GB\n`;
     details += `   • Usage: ${info.memoryPercentage}%\n`;
     if (info.diskUsage !== 'N/A') {
         details += `\n💾 **Disk Information:**\n`;
@@ -152,7 +180,7 @@ function formatDetailedSystemInfo(info) {
     }
     details += `\n⏱️ **System Uptime:** ${info.uptime} minutes\n`;
     if (info.networkInfo !== 'N/A') {
-        details += `\n🌐 **Network:** ${info.networkInfo}\n`;
+        details += `\n🌐 **Network Speed:** ${info.networkInfo}\n`;
     }
     return details;
 }
@@ -247,6 +275,7 @@ function activate(context) {
     context.subscriptions.push(toggleDisposable);
 }
 function deactivate() {
-    // Subscriptions handle disposal of status bar and timer
+    // Reset network stats on deactivation
+    previousNetworkStats = null;
 }
 //# sourceMappingURL=extension.js.map

@@ -1,8 +1,9 @@
 {
   "name": "linux-sysinfo-monitor",
-  "displayName": "linux-sysinfo-monitor",
+  "displayName": "Linux System Info Monitor",
   "description": "A VS Code extension that monitors CPU, RAM, disk, and system info for Linux platforms.",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "publisher": "QiangyuLi",
   "engines": {
     "vscode": "^1.102.0"
   },

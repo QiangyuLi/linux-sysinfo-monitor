@@ -17,11 +17,11 @@ A comprehensive VS Code extension that provides real-time system monitoring for 
 
 ### Status Bar (Compact View)
 - **CPU**: Core count and usage percentage
-- **Memory**: Used/Total memory in MB with percentage
+- **Memory**: Used/Total memory in GB with percentage
 - **Disk**: Root partition usage percentage
 - **Uptime**: System uptime in minutes
 - **Load**: System load average
-- **Network**: Network transfer statistics (↓received ↑transmitted)
+- **Network**: Real-time network speed (↓download ↑upload in B/s, KB/s, or MB/s)
 - **Temperature**: CPU temperature (if available)
 
 ### Detailed View
@@ -83,7 +83,7 @@ If neither method works, temperature information will not be displayed.
 
 ## Network Statistics
 
-The extension shows network transfer statistics for the main network interface (the one used for external connectivity). The statistics show total received and transmitted data since boot.
+The extension shows real-time network speed for the main network interface (the one used for external connectivity). The speed is calculated by measuring the difference in bytes transferred between refresh intervals, showing actual current download/upload speeds in B/s, KB/s, or MB/s.
 
 ## Troubleshooting
 
