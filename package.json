@@ -1,0 +1,8 @@
+"contributes": {
+  "commands": [
+    {
+      "command": "linuxSysinfoMonitor.showInfo",
+      "title": "Show Linux System Info"
+    }
+  ]
+}
