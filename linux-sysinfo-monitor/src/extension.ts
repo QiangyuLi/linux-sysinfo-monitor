@@ -160,7 +160,7 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarItem.command = 'linuxSysinfoMonitor.showDetails';
   context.subscriptions.push(statusBarItem);
 
-  let intervalId: NodeJS.Timer | null = null;
+  let intervalId: NodeJS.Timeout | null = null;
 
   // Function to update status bar text
   const updateStatusBar = async () => {
