@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+
+# VS Code test files
+.vscode-test/
+
+# Extension packages
+*.vsix
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
